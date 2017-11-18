@@ -14,13 +14,13 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
-import micdm.yeelight.models.Device
 import micdm.yeelight.R
 import micdm.yeelight.di.DI
+import micdm.yeelight.models.Device
 import micdm.yeelight.tools.DeviceFinder
+import micdm.yeelight.ui.navigation.Navigator
 import micdm.yeelight.ui.views.BaseView
 import micdm.yeelight.ui.views.BaseViewHolder
-import micdm.yeelight.ui.navigation.Navigator
 import javax.inject.Inject
 
 class DevicesView(context: Context, attrs: AttributeSet): BaseView(context, attrs) {

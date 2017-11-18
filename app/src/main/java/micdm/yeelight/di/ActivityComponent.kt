@@ -2,10 +2,10 @@ package micdm.yeelight.di
 
 import dagger.Subcomponent
 import micdm.yeelight.MainActivity
+import micdm.yeelight.ui.navigation.Navigator
 import micdm.yeelight.ui.views.device.DeviceView
 import micdm.yeelight.ui.views.devices.DevicesAdapter
 import micdm.yeelight.ui.views.devices.DevicesView
-import micdm.yeelight.ui.navigation.Navigator
 
 @ActivityScope
 @Subcomponent(modules = arrayOf(ActivityModule::class))
