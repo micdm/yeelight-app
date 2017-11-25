@@ -15,7 +15,7 @@ class PickColorView(context: Context, attrs: AttributeSet): BaseView(context, at
     private val rect: RectF = RectF()
     private val paint: Paint = Paint()
 
-    private val hue = BehaviorSubject.createDefault(0)
+    private val hue = BehaviorSubject.create<Int>()
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         setMeasuredDimension(getDefaultSize(suggestedMinimumWidth, widthMeasureSpec),
@@ -31,8 +31,10 @@ class PickColorView(context: Context, attrs: AttributeSet): BaseView(context, at
             paint.color = android.graphics.Color.HSVToColor(floatArrayOf(hue.toFloat(), 0.7f, 1f))
             canvas.drawRect(rect, paint)
         }
-        paint.color = android.graphics.Color.HSVToColor(floatArrayOf(hue.value.toFloat(), 0.7f, 1f))
-        canvas.drawCircle(hue.value * stepX + radius, canvas.height / 2f, radius, paint)
+        if (hue.hasValue()) {
+            paint.color = android.graphics.Color.HSVToColor(floatArrayOf(hue.value.toFloat(), 0.7f, 1f))
+            canvas.drawCircle(hue.value * stepX + radius, canvas.height / 2f, radius, paint)
+        }
     }
 
     override fun setupViews() {

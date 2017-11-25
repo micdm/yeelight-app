@@ -1,6 +1,7 @@
 package micdm.yeelight.di
 
 import android.support.v7.app.AppCompatActivity
+import android.view.LayoutInflater
 import com.bluelinelabs.conductor.ControllerChangeHandler
 import com.bluelinelabs.conductor.changehandler.HorizontalChangeHandler
 import dagger.Module
@@ -14,6 +15,10 @@ class ActivityModule(private val activity: AppCompatActivity) {
     @Provides
     @ActivityScope
     fun provideAppCompatActivity(): AppCompatActivity = activity
+
+    @Provides
+    @ActivityScope
+    fun provideLayoutInflater(): LayoutInflater = activity.layoutInflater
 
     @Provides
     @ActivityScope

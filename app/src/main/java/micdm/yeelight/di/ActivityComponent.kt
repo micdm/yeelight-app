@@ -3,7 +3,7 @@ package micdm.yeelight.di
 import dagger.Subcomponent
 import micdm.yeelight.MainActivity
 import micdm.yeelight.ui.navigation.Navigator
-import micdm.yeelight.ui.views.device.DeviceView
+import micdm.yeelight.ui.views.device.CannotConnectView
 import micdm.yeelight.ui.views.devices.DevicesAdapter
 import micdm.yeelight.ui.views.devices.DevicesView
 
@@ -17,9 +17,11 @@ interface ActivityComponent {
         fun build(): ActivityComponent
     }
 
+    fun getDeviceComponentBuilder(): DeviceComponent.Builder
+
     fun inject(target: MainActivity)
     fun inject(target: DevicesView)
     fun inject(target: DevicesAdapter)
-    fun inject(target: DeviceView)
     fun inject(target: Navigator)
+    fun inject(target: CannotConnectView)
 }

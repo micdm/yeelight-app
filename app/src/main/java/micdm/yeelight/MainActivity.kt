@@ -9,7 +9,7 @@ import micdm.yeelight.tools.DeviceFinder
 import micdm.yeelight.ui.navigation.Navigator
 import javax.inject.Inject
 
-class MainActivity: AppCompatActivity() {
+class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var deviceFinder: DeviceFinder

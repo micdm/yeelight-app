@@ -1,17 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
-    <Button
-        android:id="@+id/v__device__toggle"
+    android:layout_height="match_parent">
+    <TextView
+        android:id="@+id/v__device__connecting"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:text="Toggle"/>
-    <micdm.yeelight.ui.views.device.PickColorView
-        android:id="@+id/v__device__pick_color"
+        android:text="@string/v__device__connecting"/>
+    <LinearLayout
+        android:id="@+id/v__device__connected"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-</LinearLayout>
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:layout_gravity="center"
+        android:gravity="center">
+        <ImageView
+            android:id="@+id/v__device__toggle"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_power"/>
+        <micdm.yeelight.ui.views.device.PickColorView
+            android:id="@+id/v__device__pick_color"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"/>
+    </LinearLayout>
+    <micdm.yeelight.ui.views.device.CannotConnectView
+        android:id="@+id/v__device__cannot_connect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"/>
+</FrameLayout>

@@ -14,17 +14,27 @@ abstract class BaseView(context: Context, attrs: AttributeSet): FrameLayout(cont
     private var viewUnbinder: Unbinder? = null
     private var subscription: Disposable? = null
 
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
+    override fun onFinishInflate() {
+        super.onFinishInflate()
+        createViewHierarchy()
+    }
+
+    private fun createViewHierarchy() {
         createStructure()
         viewUnbinder = ButterKnife.bind(this)
         setupViews()
-        subscription = subscribeForEvents()
     }
 
     open fun createStructure() {}
 
     open fun setupViews() {}
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        if (!isInEditMode) {
+            subscription = subscribeForEvents()
+        }
+    }
 
     open fun subscribeForEvents(): Disposable? = null
 
