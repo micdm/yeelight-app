@@ -8,26 +8,25 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:text="@string/v__device__connecting"/>
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/v__device__connected"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="16dp"
-        android:layout_gravity="center"
-        android:gravity="center">
+        android:padding="16dp">
         <ImageView
             android:id="@+id/v__device__toggle"
             android:layout_width="100dp"
             android:layout_height="100dp"
-            android:layout_gravity="center"
+            android:layout_centerInParent="true"
             android:src="@drawable/ic_power"/>
         <micdm.yeelight.ui.views.device.PickColorView
             android:id="@+id/v__device__pick_color"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"/>
-    </LinearLayout>
+            android:layout_marginTop="16dp"
+            android:layout_below="@id/v__device__toggle"/>
+    </RelativeLayout>
     <micdm.yeelight.ui.views.device.CannotConnectView
         android:id="@+id/v__device__cannot_connect"
         android:layout_width="wrap_content"

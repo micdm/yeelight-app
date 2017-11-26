@@ -16,7 +16,9 @@ abstract class BaseView(context: Context, attrs: AttributeSet): FrameLayout(cont
 
     override fun onFinishInflate() {
         super.onFinishInflate()
-        createViewHierarchy()
+        if (!isInEditMode) {
+            createViewHierarchy()
+        }
     }
 
     private fun createViewHierarchy() {
