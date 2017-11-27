@@ -1,4 +1,4 @@
-package micdm.yeelight.ui.views.device
+package micdm.yeelight.ui.views
 
 import android.content.Context
 import android.util.AttributeSet

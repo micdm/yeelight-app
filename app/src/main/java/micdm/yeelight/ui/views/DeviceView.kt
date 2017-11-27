@@ -1,4 +1,4 @@
-package micdm.yeelight.ui.views.device
+package micdm.yeelight.ui.views
 
 import android.content.Context
 import android.util.AttributeSet
@@ -19,7 +19,6 @@ import micdm.yeelight.models.DeviceState
 import micdm.yeelight.models.UNDEFINED_DEVICE_STATE
 import micdm.yeelight.tools.DeviceController
 import micdm.yeelight.tools.DeviceControllerStore
-import micdm.yeelight.ui.views.BaseView
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 

@@ -221,6 +221,7 @@ class DeviceController(private val address: Address) {
             )
             .subscribe {
                 it.close()
+                _deviceState.onNext(UNDEFINED_DEVICE_STATE)
                 _connectionState.onNext(DisconnectedState())
             }
     }

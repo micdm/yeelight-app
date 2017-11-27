@@ -1,4 +1,4 @@
-package micdm.yeelight.ui.views.device
+package micdm.yeelight.ui.views
 
 import android.os.Bundle
 import android.view.LayoutInflater

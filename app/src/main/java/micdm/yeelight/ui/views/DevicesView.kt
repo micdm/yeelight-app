@@ -1,4 +1,4 @@
-package micdm.yeelight.ui.views.devices
+package micdm.yeelight.ui.views
 
 import android.content.Context
 import android.support.v7.widget.LinearLayoutManager
@@ -10,7 +10,6 @@ import android.view.ViewGroup
 import android.widget.TextView
 import butterknife.BindView
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
@@ -18,9 +17,6 @@ import micdm.yeelight.R
 import micdm.yeelight.di.DI
 import micdm.yeelight.models.Device
 import micdm.yeelight.tools.DeviceFinder
-import micdm.yeelight.ui.navigation.Navigator
-import micdm.yeelight.ui.views.BaseView
-import micdm.yeelight.ui.views.BaseViewHolder
 import javax.inject.Inject
 
 class DevicesView(context: Context, attrs: AttributeSet): BaseView(context, attrs) {
@@ -29,11 +25,12 @@ class DevicesView(context: Context, attrs: AttributeSet): BaseView(context, attr
     lateinit var deviceFinder: DeviceFinder
     @Inject
     lateinit var layoutInflater: LayoutInflater
-    @Inject
-    lateinit var navigator: Navigator
 
     @BindView(R.id.v__devices__devices)
     lateinit var devicesView: RecyclerView
+
+    val pickDeviceRequests
+        get() = (devicesView.adapter as DevicesAdapter).pickDeviceRequests
 
     init {
         if (!isInEditMode) {
@@ -52,12 +49,7 @@ class DevicesView(context: Context, attrs: AttributeSet): BaseView(context, attr
         devicesView.layoutManager = LinearLayoutManager(context)
     }
 
-    override fun subscribeForEvents(): Disposable? {
-        return CompositeDisposable(
-            subscribeForDevices(),
-            subscribeForNavigation()
-        );
-    }
+    override fun subscribeForEvents(): Disposable? = subscribeForDevices()
 
     private fun subscribeForDevices(): Disposable {
         return deviceFinder.getDevices()
@@ -65,12 +57,6 @@ class DevicesView(context: Context, attrs: AttributeSet): BaseView(context, attr
             .subscribe {
                 (devicesView.adapter as DevicesAdapter).devices = it.toList().sortedBy { "${it.host}:${it.port}" }
             }
-    }
-
-    private fun subscribeForNavigation(): Disposable {
-        return (devicesView.adapter as DevicesAdapter).goToDeviceRequests.subscribe {
-            navigator.goToDevice(it.first, it.second)
-        }
     }
 }
 
@@ -80,7 +66,7 @@ class DevicesAdapter: RecyclerView.Adapter<ViewHolder>() {
     lateinit var layoutInflater: LayoutInflater
 
     private var items: List<Device> = emptyList()
-    val goToDeviceRequests: Subject<Pair<String, Int>> = PublishSubject.create()
+    val pickDeviceRequests: Subject<Pair<String, Int>> = PublishSubject.create()
 
     var devices: List<Device> = items
         set(value) {
@@ -94,7 +80,7 @@ class DevicesAdapter: RecyclerView.Adapter<ViewHolder>() {
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = items[position]
-        holder.itemView.setOnClickListener { goToDeviceRequests.onNext(Pair(item.host, item.port)) }
+        holder.itemView.setOnClickListener { pickDeviceRequests.onNext(Pair(item.host, item.port)) }
         holder.addressView.text = "${item.host}:${item.port}"
     }
 
