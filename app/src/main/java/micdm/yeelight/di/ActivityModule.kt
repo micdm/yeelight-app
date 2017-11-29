@@ -1,5 +1,6 @@
 package micdm.yeelight.di
 
+import android.content.res.Resources
 import android.support.v7.app.AppCompatActivity
 import android.view.LayoutInflater
 import com.bluelinelabs.conductor.ControllerChangeHandler
@@ -19,6 +20,10 @@ class ActivityModule(private val activity: AppCompatActivity) {
     @Provides
     @ActivityScope
     fun provideLayoutInflater(): LayoutInflater = activity.layoutInflater
+
+    @Provides
+    @ActivityScope
+    fun provideResources(): Resources = activity.resources
 
     @Provides
     @ActivityScope

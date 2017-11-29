@@ -36,7 +36,7 @@ class DeviceView(context: Context, attrs: AttributeSet) : BaseView(context, attr
     @BindView(R.id.v__device__connected)
     lateinit var connectedView: View
     @BindView(R.id.v__device__cannot_connect)
-    lateinit var cannotConnectView: CannotConnectView
+    lateinit var retryView: RetryView
 
     @BindView(R.id.v__device__toggle)
     lateinit var toggleView: ImageView
@@ -74,7 +74,7 @@ class DeviceView(context: Context, attrs: AttributeSet) : BaseView(context, attr
         return CompositeDisposable(
             subscribeForConnectionState(),
             subscribeForDeviceState(),
-            subscribeForConnect(),
+            subscribeForConnectRequests(),
             subscribeForToggle(),
             subscribeForColor()
         )
@@ -86,11 +86,11 @@ class DeviceView(context: Context, attrs: AttributeSet) : BaseView(context, attr
             .subscribe {
                 connectingView.visibility = View.GONE
                 connectedView.visibility = View.GONE
-                cannotConnectView.visibility = View.GONE
+                retryView.visibility = View.GONE
                 (when (it) {
                     is DeviceController.ConnectingState -> connectingView
                     is DeviceController.ConnectedState -> connectedView
-                    is DeviceController.DisconnectedState -> cannotConnectView
+                    is DeviceController.DisconnectedState -> retryView
                     else -> throw IllegalStateException("not supposed to happen")
                 }).visibility = View.VISIBLE
             }
@@ -114,11 +114,10 @@ class DeviceView(context: Context, attrs: AttributeSet) : BaseView(context, attr
             }
     }
 
-    private fun subscribeForConnect(): Disposable {
-        return cannotConnectView.getRetryRequests().subscribe {
+    private fun subscribeForConnectRequests(): Disposable =
+        retryView.retryRequests.subscribe {
             deviceController.connect()
         }
-    }
 
     private fun subscribeForToggle(): Disposable {
         return RxView.clicks(toggleView)

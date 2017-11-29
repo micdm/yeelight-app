@@ -25,7 +25,7 @@ interface ActivityComponent {
     fun inject(target: DevicesView)
     fun inject(target: DevicesAdapter)
     fun inject(target: Navigator)
-    fun inject(target: CannotConnectView)
+    fun inject(target: RetryView)
     fun inject(target: PickDeviceToControlView)
     fun inject(target: PickDeviceForShortcutView)
 }

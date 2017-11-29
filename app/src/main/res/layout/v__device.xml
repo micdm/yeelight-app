@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
     <TextView
@@ -27,9 +27,10 @@
             android:layout_marginTop="16dp"
             android:layout_below="@id/v__device__toggle"/>
     </RelativeLayout>
-    <micdm.yeelight.ui.views.CannotConnectView
+    <micdm.yeelight.ui.views.RetryView
         android:id="@+id/v__device__cannot_connect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"/>
+        android:layout_gravity="center"
+        app:label="@string/v__device__retry"/>
 </FrameLayout>

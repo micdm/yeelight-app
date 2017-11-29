@@ -3,7 +3,11 @@
     <string name="shortcut_label">Toggle</string>
     <string name="a__toggle_light__wait">Wait a second…</string>
     <string name="a__toggle_light__fail">Failed</string>
+    <string name="v__retry__button">Try again!</string>
+    <string name="v__devices__discovering">Discovering…</string>
+    <string name="v__devices__finished">Discovering finished, %1$s %2$s found</string>
+    <string name="v__devices__retry">Cannot discover devices</string>
+    <string name="v__devices_item__text">%1$s:%2$s</string>
     <string name="v__device__connecting">Connecting…</string>
-    <string name="v__device__cannot_connect__text">Cannot connect</string>
-    <string name="v__device__cannot_connect__button">Try again!</string>
+    <string name="v__device__retry">Cannot connect to device</string>
 </resources>
