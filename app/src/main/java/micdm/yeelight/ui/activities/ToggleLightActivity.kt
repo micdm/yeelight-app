@@ -2,7 +2,6 @@ package micdm.yeelight.ui.activities
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.widget.Toast
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -31,8 +30,8 @@ class ToggleLightActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        DI.activityComponent = DI.appComponent!!.getActivityComponentBuilder().activityModule(ActivityModule(this)).build()
-        DI.activityComponent?.inject(this)
+        DI.toggleLightActivityComponent = DI.appComponent!!.getToggleLightActivityComponentBuilder().activityModule(ActivityModule(this)).build()
+        DI.toggleLightActivityComponent?.inject(this)
         setContentView(R.layout.a__toggle_light)
     }
 
@@ -75,6 +74,6 @@ class ToggleLightActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        DI.activityComponent = null
+        DI.toggleLightActivityComponent = null
     }
 }

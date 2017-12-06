@@ -19,8 +19,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        DI.activityComponent = DI.appComponent!!.getActivityComponentBuilder().activityModule(ActivityModule(this)).build()
-        DI.activityComponent?.inject(this)
+        DI.mainActivityComponent = DI.appComponent!!.getMainActivityComponentBuilder().activityModule(ActivityModule(this)).build()
+        DI.mainActivityComponent?.inject(this)
         setContentView(R.layout.a__main)
         navigator.init(findViewById<ViewGroup>(R.id.a__main__root), savedInstanceState)
     }
@@ -43,6 +43,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        DI.activityComponent = null
+        DI.mainActivityComponent = null
     }
 }

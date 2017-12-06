@@ -7,8 +7,8 @@ import com.bluelinelabs.conductor.Conductor
 import com.bluelinelabs.conductor.ControllerChangeHandler
 import com.bluelinelabs.conductor.Router
 import com.bluelinelabs.conductor.RouterTransaction
-import micdm.yeelight.ui.views.newDeviceController
 import micdm.yeelight.ui.views.DevicesController
+import micdm.yeelight.ui.views.newDeviceController
 import javax.inject.Inject
 import javax.inject.Named
 

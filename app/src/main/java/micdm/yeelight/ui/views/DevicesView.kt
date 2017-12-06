@@ -44,7 +44,7 @@ class DevicesView(context: Context, attrs: AttributeSet): BaseView(context, attr
 
     init {
         if (!isInEditMode) {
-            DI.activityComponent?.inject(this)
+            DI.mainActivityComponent?.inject(this)
         }
     }
 
@@ -54,7 +54,7 @@ class DevicesView(context: Context, attrs: AttributeSet): BaseView(context, attr
 
     override fun setupViews() {
         val adapter = DevicesAdapter()
-        DI.activityComponent?.inject(adapter)
+        DI.mainActivityComponent?.inject(adapter)
         devicesView.adapter = adapter
         devicesView.layoutManager = LinearLayoutManager(context)
     }

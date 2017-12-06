@@ -17,7 +17,7 @@ class DeviceController(args: Bundle): Controller(args) {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup): View {
         DI.deviceComponent =
-            DI.activityComponent!!.getDeviceComponentBuilder()
+            DI.mainActivityComponent!!.getDeviceComponentBuilder()
                 .deviceModule(DeviceModule(Address(args.getString(DEVICE_HOST_KEY), args.getInt(DEVICE_PORT_KEY))))
                 .build()
         return inflater.inflate(R.layout.c__device, container, false)

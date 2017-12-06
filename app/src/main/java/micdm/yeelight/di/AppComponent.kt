@@ -8,7 +8,9 @@ import micdm.yeelight.tools.DeviceFinder
 @Component(modules = arrayOf(AppModule::class))
 interface AppComponent {
 
-    fun getActivityComponentBuilder(): ActivityComponent.Builder
+    fun getMainActivityComponentBuilder(): MainActivityComponent.Builder
+    fun getShortcutActivityComponentBuilder(): ShortcutActivityComponent.Builder
+    fun getToggleLightActivityComponentBuilder(): ToggleLightActivityComponent.Builder
 
     fun getDeviceFinder(): DeviceFinder
 

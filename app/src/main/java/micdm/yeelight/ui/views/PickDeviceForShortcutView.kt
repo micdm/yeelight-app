@@ -24,7 +24,7 @@ class PickDeviceForShortcutView(context: Context, attrs: AttributeSet) : BaseVie
 
     init {
         if (!isInEditMode) {
-            DI.activityComponent?.inject(this)
+            DI.mainActivityComponent?.inject(this)
         }
     }
 

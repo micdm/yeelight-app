@@ -22,7 +22,7 @@ class PickDeviceToControlView(context: Context, attrs: AttributeSet) : BaseView(
 
     init {
         if (!isInEditMode) {
-            DI.activityComponent?.inject(this)
+            DI.mainActivityComponent?.inject(this)
         }
     }
 

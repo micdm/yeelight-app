@@ -8,7 +8,6 @@ import android.util.AttributeSet
 import io.reactivex.Observable
 import io.reactivex.subjects.BehaviorSubject
 import micdm.yeelight.R
-import micdm.yeelight.ui.views.BaseView
 
 class PickColorView(context: Context, attrs: AttributeSet): BaseView(context, attrs) {
 
