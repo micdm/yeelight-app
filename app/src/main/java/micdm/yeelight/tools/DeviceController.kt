@@ -8,9 +8,7 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
-import micdm.yeelight.models.Address
-import micdm.yeelight.models.DeviceState
-import micdm.yeelight.models.UNDEFINED_DEVICE_STATE
+import micdm.yeelight.models.*
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.InetSocketAddress
@@ -134,7 +132,7 @@ class DeviceController(private val address: Address) {
         val outgoingObservable =
             channel
                 .filter { it !== CLOSED_CHANNEL && it.isConnected }
-                .map { OutgoingPacket("get_prop", listOf("power", "hue", "sat")) }
+                .map { OutgoingPacket("get_prop", listOf("power", "color_mode", "ct", "hue", "sat")) }
                 .share()
         Observable
             .merge(
@@ -153,13 +151,26 @@ class DeviceController(private val address: Address) {
                             .map { (incoming, _) ->
                                 mapOf(
                                     Pair("power", incoming.result[0]),
-                                    Pair("hue", incoming.result[1]),
-                                    Pair("sat", incoming.result[2])
+                                    Pair("color_mode", incoming.result[1]),
+                                    Pair("ct", incoming.result[2]),
+                                    Pair("hue", incoming.result[3]),
+                                    Pair("sat", incoming.result[4])
                                 )
                             },
                         incoming
                             .ofType(PropsPacket::class.java)
                             .map { it.params }
+                            .scan(Pair<Map<String, String>, Map<String, String>>(emptyMap(), emptyMap()), { (previous, _), params ->
+                                if ("color_mode" in params) {
+                                    Pair(params, emptyMap())
+                                } else {
+                                    val merged = previous.toMutableMap()
+                                    merged.putAll(params)
+                                    Pair(emptyMap(), merged)
+                                }
+                            })
+                            .map { (_, result) -> result }
+                            .filter { it.isNotEmpty() }
                     )
                     .scan(emptyMap<String, String>(), { accumulated, packet ->
                         val result = mutableMapOf<String, String>()
@@ -168,8 +179,11 @@ class DeviceController(private val address: Address) {
                         result
                     })
                     .skip(1)
-                    .filter { "power" in it && "hue" in it && "sat" in it }
-                    .map { DeviceState(it["power"] == "on", it["hue"]!!.toInt(), it["sat"]!!.toInt()) }
+                    .filter { it.size == 5 }
+                    .map {
+                        val color = if (it["color_mode"] == "2") TemperatureColor(it["ct"]!!.toInt()) else HsvColor(it["hue"]!!.toInt(), it["sat"]!!.toInt())
+                        DeviceState(it["power"] == "on", color)
+                    }
             )
             .subscribe {
                 Log.d("TAG", "Device state is $it")

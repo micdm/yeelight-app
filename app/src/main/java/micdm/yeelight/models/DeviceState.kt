@@ -1,5 +1,13 @@
 package micdm.yeelight.models
 
-data class DeviceState(val isEnabled: Boolean, val hue: Int, val saturation: Int)
+interface Color
 
-val UNDEFINED_DEVICE_STATE = DeviceState(false, 0, 0)
+class UndefinedColor : Color
+
+data class TemperatureColor(val temperature: Int) : Color
+
+data class HsvColor(val hue: Int, val saturation: Int) : Color
+
+data class DeviceState(val isEnabled: Boolean, val color: Color)
+
+val UNDEFINED_DEVICE_STATE = DeviceState(false, UndefinedColor())

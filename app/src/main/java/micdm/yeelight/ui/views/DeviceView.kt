@@ -16,6 +16,7 @@ import micdm.yeelight.R
 import micdm.yeelight.di.DI
 import micdm.yeelight.models.Address
 import micdm.yeelight.models.DeviceState
+import micdm.yeelight.models.HsvColor
 import micdm.yeelight.models.UNDEFINED_DEVICE_STATE
 import micdm.yeelight.tools.DeviceController
 import micdm.yeelight.tools.DeviceControllerStore
@@ -109,7 +110,9 @@ class DeviceView(context: Context, attrs: AttributeSet) : BaseView(context, attr
                     true -> R.color.device_enabled_inverse
                     else -> R.color.device_disabled_inverse
                 }))
-                pickColorView.setHue(it.hue)
+                if (it.color is HsvColor) {
+                    pickColorView.setHue(it.color.hue)
+                }
                 pickColorView.visibility = if (it.isEnabled) View.VISIBLE else View.GONE
             }
     }
@@ -139,7 +142,7 @@ class DeviceView(context: Context, attrs: AttributeSet) : BaseView(context, attr
         return pickColorView.getHue()
             .withLatestFrom(
                 deviceController.deviceState,
-                BiFunction { hue: Int, deviceState: DeviceState -> if (hue != deviceState.hue) hue else -1 }
+                BiFunction { hue: Int, deviceState: DeviceState -> if (deviceState.color is HsvColor && hue == deviceState.color.hue) -1 else hue }
             )
             .filter { it != -1 }
             .throttleLast(500, TimeUnit.MILLISECONDS)
