@@ -26,6 +26,12 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:layout_below="@id/v__device__toggle"/>
+        <micdm.yeelight.ui.views.PickTemperatureView
+            android:id="@+id/v__device__pick_temperature"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_below="@id/v__device__pick_color"/>
     </RelativeLayout>
     <micdm.yeelight.ui.views.RetryView
         android:id="@+id/v__device__cannot_connect"

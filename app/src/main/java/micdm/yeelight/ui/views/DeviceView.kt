@@ -14,10 +14,7 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.functions.BiFunction
 import micdm.yeelight.R
 import micdm.yeelight.di.DI
-import micdm.yeelight.models.Address
-import micdm.yeelight.models.DeviceState
-import micdm.yeelight.models.HsvColor
-import micdm.yeelight.models.UNDEFINED_DEVICE_STATE
+import micdm.yeelight.models.*
 import micdm.yeelight.tools.DeviceController
 import micdm.yeelight.tools.DeviceControllerStore
 import java.util.concurrent.TimeUnit
@@ -43,6 +40,8 @@ class DeviceView(context: Context, attrs: AttributeSet) : BaseView(context, attr
     lateinit var toggleView: ImageView
     @BindView(R.id.v__device__pick_color)
     lateinit var pickColorView: PickColorView
+    @BindView(R.id.v__device__pick_temperature)
+    lateinit var pickTemperatureView: PickTemperatureView
 
     private val deviceController
         get() = deviceControllerStore.getDeviceController(deviceAddress)
@@ -77,7 +76,8 @@ class DeviceView(context: Context, attrs: AttributeSet) : BaseView(context, attr
             subscribeForDeviceState(),
             subscribeForConnectRequests(),
             subscribeForToggle(),
-            subscribeForColor()
+            subscribeForColor(),
+            subscribeForTemperature()
         )
     }
 
@@ -112,6 +112,9 @@ class DeviceView(context: Context, attrs: AttributeSet) : BaseView(context, attr
                 }))
                 if (it.color is HsvColor) {
                     pickColorView.setHue(it.color.hue)
+                }
+                if (it.color is TemperatureColor) {
+                    pickTemperatureView.setTemperature(it.color.temperature)
                 }
                 pickColorView.visibility = if (it.isEnabled) View.VISIBLE else View.GONE
             }
@@ -148,6 +151,28 @@ class DeviceView(context: Context, attrs: AttributeSet) : BaseView(context, attr
             .throttleLast(500, TimeUnit.MILLISECONDS)
             .switchMap {
                 deviceController.setColor(it, 100)
+                    .toSingleDefault(true)
+                    .onErrorReturnItem(false)
+                    .toObservable()
+            }
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                if (!it) {
+                    Toast.makeText(context, "FAIL!", Toast.LENGTH_SHORT).show()
+                }
+            }
+    }
+
+    private fun subscribeForTemperature(): Disposable {
+        return pickTemperatureView.getTemperature()
+            .withLatestFrom(
+                deviceController.deviceState,
+                BiFunction { temperature: Int, deviceState: DeviceState -> if (deviceState.color is TemperatureColor && temperature == deviceState.color.temperature) -1 else temperature }
+            )
+            .filter { it != -1 }
+            .throttleLast(500, TimeUnit.MILLISECONDS)
+            .switchMap {
+                deviceController.setTemperature(it)
                     .toSingleDefault(true)
                     .onErrorReturnItem(false)
                     .toObservable()

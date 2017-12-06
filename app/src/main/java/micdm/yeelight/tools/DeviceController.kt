@@ -280,6 +280,9 @@ class DeviceController(private val address: Address) {
     fun setColor(hue: Int, saturation: Int): Completable =
         sendDeviceCommand("set_hsv", listOf(hue, saturation, "sudden", "0"))
 
+    fun setTemperature(temperature: Int): Completable =
+        sendDeviceCommand("set_ct_abx", listOf(temperature, "sudden", "0"))
+
     private fun sendDeviceCommand(method: String, params: List<Any> = emptyList()): Completable {
         val outgoing = OutgoingPacket(method, params)
         return incoming
