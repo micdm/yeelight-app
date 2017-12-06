@@ -161,11 +161,15 @@ class DeviceController(private val address: Address) {
                             .ofType(PropsPacket::class.java)
                             .map { it.params }
                             .scan(Pair<Map<String, String>, Map<String, String>>(emptyMap(), emptyMap()), { (previous, _), params ->
-                                if ("color_mode" in params) {
-                                    Pair(params, emptyMap())
+                                val merged = previous.toMutableMap()
+                                merged.putAll(params)
+                                if ("color_mode" in merged) {
+                                    if ("hue" in merged || "ct" in merged) {
+                                        Pair(emptyMap(), merged)
+                                    } else {
+                                        Pair(merged, emptyMap())
+                                    }
                                 } else {
-                                    val merged = previous.toMutableMap()
-                                    merged.putAll(params)
                                     Pair(emptyMap(), merged)
                                 }
                             })
