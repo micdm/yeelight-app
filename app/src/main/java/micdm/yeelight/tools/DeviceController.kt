@@ -82,21 +82,36 @@ class DeviceController(private val address: Address) {
         get() = _deviceState
 
     fun init() {
-        val connectRequests = getConnectRequests().share()
+        val clientCount = getClientCount().share()
+        val connectRequests = getConnectRequests(clientCount).share()
         val channel = getChannel(connectRequests).share()
-        subscribeForConnectCommands(connectRequests)
+        subscribeForClientCount(clientCount)
+        subscribeForConnect(connectRequests)
         subscribeForConnectionState(channel)
         subscribeForIncoming(channel)
         subscribeForDeviceCommand(channel)
         subscribeForDeviceState(channel)
-        subscribeForDetachCommands(channel)
+        subscribeForDisconnect(clientCount, channel)
     }
 
-    private fun getConnectRequests(): Observable<Any> {
+    private fun getClientCount(): Observable<Int> {
+        return Observable
+            .merge(
+                commands
+                    .filter { it is AttachCommand }
+                    .map { 1 },
+                commands
+                    .filter { it is DetachCommand }
+                    .delay(5, TimeUnit.SECONDS)
+                    .map { -1 }
+            )
+            .scan(0, { accumulated, delta -> accumulated + delta })
+    }
+
+    private fun getConnectRequests(clientCount: Observable<Int>): Observable<Any> {
         return Observable.merge(
-            commands
-                .distinctUntilChanged()
-                .ofType(AttachCommand::class.java),
+            clientCount
+                .distinctUntilChanged { previous, current -> previous != 0 || current == 0 },
             commands
                 .ofType(ConnectCommand::class.java)
         )
@@ -116,27 +131,33 @@ class DeviceController(private val address: Address) {
             }
     }
 
-    private fun subscribeForConnectCommands(connectRequests: Observable<Any>) {
+    private fun subscribeForClientCount(clientCount: Observable<Int>) {
+        clientCount.subscribe {
+            Log.d("TAG", "Clients attached now: $it")
+        }
+    }
+
+    private fun subscribeForConnect(connectRequests: Observable<Any>) {
         connectRequests.subscribe {
             _connectionState.onNext(ConnectingState())
         }
     }
 
-    private fun subscribeForConnectionState(channel: Observable<SocketChannel>) {
-        channel
+    private fun subscribeForConnectionState(channelObservable: Observable<SocketChannel>) {
+        channelObservable
             .map { if (it !== CLOSED_CHANNEL) ConnectedState() else DisconnectedState() }
             .subscribe(_connectionState::onNext)
     }
 
-    private fun subscribeForDeviceState(channel: Observable<SocketChannel>) {
+    private fun subscribeForDeviceState(channelObservable: Observable<SocketChannel>) {
         val outgoingObservable =
-            channel
+            channelObservable
                 .filter { it !== CLOSED_CHANNEL && it.isConnected }
                 .map { OutgoingPacket("get_prop", listOf("power", "color_mode", "ct", "hue", "sat")) }
                 .share()
         Observable
             .merge(
-                channel
+                channelObservable
                     .filter { it !== CLOSED_CHANNEL && it.isConnected }
                     .map { UNDEFINED_DEVICE_STATE },
                 Observable
@@ -198,8 +219,8 @@ class DeviceController(private val address: Address) {
         }
     }
 
-    private fun subscribeForIncoming(observableChannel: Observable<SocketChannel>) {
-        observableChannel
+    private fun subscribeForIncoming(channelObservable: Observable<SocketChannel>) {
+        channelObservable
             .observeOn(Schedulers.newThread())
             .switchMap { channel ->
                 val buffer = ByteBuffer.allocate(1024)
@@ -230,14 +251,15 @@ class DeviceController(private val address: Address) {
             }
     }
 
-    private fun subscribeForDetachCommands(channelObservable: Observable<SocketChannel>) {
-        commands
-            .ofType(DetachCommand::class.java)
+    private fun subscribeForDisconnect(clientCount: Observable<Int>, channelObservable: Observable<SocketChannel>) {
+        clientCount
+            .filter { it == 0 }
             .withLatestFrom(
                 channelObservable.filter { it !== CLOSED_CHANNEL && it.isConnected },
-                BiFunction { _: Command, channel: SocketChannel -> channel }
+                BiFunction { _: Int, channel: SocketChannel -> channel }
             )
             .subscribe {
+                Log.d("TAG", "Disconnecting from $address...")
                 it.close()
                 _deviceState.onNext(UNDEFINED_DEVICE_STATE)
                 _connectionState.onNext(DisconnectedState())
@@ -268,6 +290,7 @@ class DeviceController(private val address: Address) {
     }
 
     fun attach() {
+        Log.d("TAG", "Client attached to device controller")
         commands.onNext(AttachCommand())
     }
 
@@ -276,6 +299,7 @@ class DeviceController(private val address: Address) {
     }
 
     fun detach() {
+        Log.d("TAG", "Client detached from device controller")
         commands.onNext(DetachCommand())
     }
 
