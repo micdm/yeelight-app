@@ -5,7 +5,7 @@ import micdm.yeelight.App
 import micdm.yeelight.tools.DeviceFinder
 
 @AppScope
-@Component(modules = arrayOf(AppModule::class))
+@Component(modules = [AppModule::class])
 interface AppComponent {
 
     fun getMainActivityComponentBuilder(): MainActivityComponent.Builder

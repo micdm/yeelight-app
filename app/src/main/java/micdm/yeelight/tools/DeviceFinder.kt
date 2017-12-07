@@ -1,6 +1,5 @@
 package micdm.yeelight.tools
 
-import android.util.Log
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
@@ -9,6 +8,7 @@ import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import micdm.yeelight.models.Device
+import timber.log.Timber
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
@@ -32,7 +32,7 @@ class DeviceFinder {
     private val LOCATION_HEADER_PATTERN = Pattern.compile("^Location: yeelight://([\\d.]+):([\\d]+)$")
 
     private val isStarted: Subject<Boolean> = BehaviorSubject.create()
-    private val requests: Subject<Any> = PublishSubject.create();
+    private val requests: Subject<Any> = PublishSubject.create()
 
     private val _state: Subject<State> = BehaviorSubject.createDefault(FinishedState(emptySet()))
     val state: Observable<State>
@@ -85,7 +85,7 @@ class DeviceFinder {
                     _state.onNext(DiscoveredState(emptySet()))
                     activeSocketSubject.onNext(it)
                 } catch (e: Exception) {
-                    Log.w("TAG", "Cannot discover devices", e)
+                    Timber.w(e, "Cannot discover devices")
                     it.close()
                     _state.onNext(FailedState())
                 }

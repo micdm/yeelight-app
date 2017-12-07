@@ -6,7 +6,7 @@ import micdm.yeelight.ui.navigation.Navigator
 import micdm.yeelight.ui.views.*
 
 @ActivityScope
-@Subcomponent(modules = arrayOf(ActivityModule::class))
+@Subcomponent(modules = [ActivityModule::class])
 interface MainActivityComponent {
 
     @Subcomponent.Builder

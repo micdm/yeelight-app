@@ -2,7 +2,6 @@ package micdm.yeelight.ui.activities
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.view.ViewGroup
 import micdm.yeelight.R
 import micdm.yeelight.di.ActivityModule
 import micdm.yeelight.di.DI
@@ -22,7 +21,7 @@ class MainActivity : AppCompatActivity() {
         DI.mainActivityComponent = DI.appComponent!!.getMainActivityComponentBuilder().activityModule(ActivityModule(this)).build()
         DI.mainActivityComponent?.inject(this)
         setContentView(R.layout.a__main)
-        navigator.init(findViewById<ViewGroup>(R.id.a__main__root), savedInstanceState)
+        navigator.init(findViewById(R.id.a__main__root), savedInstanceState)
     }
 
     override fun onPause() {

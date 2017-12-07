@@ -3,7 +3,7 @@ package micdm.yeelight.di
 import dagger.Subcomponent
 import micdm.yeelight.ui.views.DeviceView
 
-@Subcomponent(modules = arrayOf(DeviceModule::class))
+@Subcomponent(modules = [DeviceModule::class])
 interface DeviceComponent {
 
     @Subcomponent.Builder

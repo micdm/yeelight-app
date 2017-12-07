@@ -1,6 +1,5 @@
 package micdm.yeelight.tools
 
-import android.util.Log
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.functions.BiFunction
@@ -11,6 +10,7 @@ import io.reactivex.subjects.Subject
 import micdm.yeelight.models.*
 import org.json.JSONArray
 import org.json.JSONObject
+import timber.log.Timber
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
@@ -133,7 +133,7 @@ class DeviceController(private val address: Address) {
 
     private fun subscribeForClientCount(clientCount: Observable<Int>) {
         clientCount.subscribe {
-            Log.d("TAG", "Clients attached now: $it")
+            Timber.d("Clients attached now: $it")
         }
     }
 
@@ -211,7 +211,7 @@ class DeviceController(private val address: Address) {
                     }
             )
             .subscribe {
-                Log.d("TAG", "Device state is $it")
+                Timber.d("Device state is $it")
                 _deviceState.onNext(it)
             }
         outgoingObservable.subscribe {
@@ -229,7 +229,7 @@ class DeviceController(private val address: Address) {
                         while (channel.isConnected) {
                             val count = channel.read(buffer)
                             val string = String(buffer.array(), 0, count)
-                            Log.d("TAG", "Incoming JSON: $string")
+                            Timber.d("Incoming JSON: $string")
                             it.onNext(JSONObject(string))
                             buffer.rewind()
                         }
@@ -246,7 +246,7 @@ class DeviceController(private val address: Address) {
                 }
             }
             .subscribe {
-                Log.d("TAG", "Incoming packet: $it")
+                Timber.d("Incoming packet: $it")
                 incoming.onNext(it)
             }
     }
@@ -259,7 +259,7 @@ class DeviceController(private val address: Address) {
                 BiFunction { _: Int, channel: SocketChannel -> channel }
             )
             .subscribe {
-                Log.d("TAG", "Disconnecting from $address...")
+                Timber.d("Disconnecting from $address...")
                 it.close()
                 _deviceState.onNext(UNDEFINED_DEVICE_STATE)
                 _connectionState.onNext(DisconnectedState())
@@ -281,16 +281,16 @@ class DeviceController(private val address: Address) {
                     data.put("method", outgoing.method)
                     data.put("params", JSONArray(outgoing.params))
                     val string = "$data\r\n"
-                    Log.d("TAG", "Sending packet $data")
+                    Timber.d("Sending packet $data")
                     channel.write(ByteBuffer.wrap(string.toByteArray()))
                 } catch (e: Exception) {
-                    Log.w("TAG", "Cannot send packet", e)
+                    Timber.w(e, "Cannot send packet")
                 }
             }
     }
 
     fun attach() {
-        Log.d("TAG", "Client attached to device controller")
+        Timber.d("Client attached to device controller")
         commands.onNext(AttachCommand())
     }
 
@@ -299,7 +299,7 @@ class DeviceController(private val address: Address) {
     }
 
     fun detach() {
-        Log.d("TAG", "Client detached from device controller")
+        Timber.d("Client detached from device controller")
         commands.onNext(DetachCommand())
     }
 

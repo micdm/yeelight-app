@@ -4,7 +4,7 @@ import dagger.Subcomponent
 import micdm.yeelight.ui.activities.ShortcutActivity
 
 @ActivityScope
-@Subcomponent(modules = arrayOf(ActivityModule::class))
+@Subcomponent(modules = [ActivityModule::class])
 interface ShortcutActivityComponent {
 
     @Subcomponent.Builder

@@ -2,12 +2,13 @@ package micdm.yeelight.di
 
 import dagger.Module
 import dagger.Provides
-import micdm.yeelight.App
+import micdm.yeelight.BuildConfig
 import micdm.yeelight.tools.DeviceControllerStore
 import micdm.yeelight.tools.DeviceFinder
+import timber.log.Timber
 
 @Module
-class AppModule(private val app: App) {
+class AppModule {
 
     @Provides
     @AppScope
@@ -20,4 +21,17 @@ class AppModule(private val app: App) {
     @Provides
     @AppScope
     fun provideDeviceControllerStore(): DeviceControllerStore = DeviceControllerStore()
+
+    @Provides
+    @AppScope
+    fun provideTimberTree(): Timber.Tree {
+        if (BuildConfig.DEBUG) {
+            return Timber.DebugTree()
+        }
+        return object : Timber.Tree() {
+            override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
+                // Nothing to do here
+            }
+        }
+    }
 }
