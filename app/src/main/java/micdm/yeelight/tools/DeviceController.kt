@@ -17,56 +17,64 @@ import java.nio.channels.SocketChannel
 import java.util.*
 import java.util.concurrent.TimeUnit
 
+interface State
+
+class ConnectingState : State
+
+class ConnectedState : State
+
+class DisconnectedState : State
+
+private interface Command
+
+private class AttachCommand : Command
+
+private class ConnectCommand : Command
+
+private class DeviceCommand(val outgoing: OutgoingPacket) : Command
+
+private class DetachCommand : Command
+
+private interface IncomingPacket
+
+private data class ResultPacket(val id: Int, val result: List<String>) : IncomingPacket {
+
+    val isSuccess
+        get() = result[0] == "ok"
+
+    fun matches(outgoing: OutgoingPacket): Boolean = (id == outgoing.id)
+}
+
+private data class PropsPacket(val params: Map<String, String>) : IncomingPacket
+
+private class UnknownPacket : IncomingPacket
+
+private data class OutgoingPacket(val method: String, val params: List<Any> = emptyList()) {
+
+    val id = Random().nextInt()
+}
+
+private class IncomingPacketDeserializer {
+
+    fun newResultPacket(data: JSONObject): ResultPacket {
+        val result = data.getJSONArray("result")
+        return ResultPacket(
+            data.getInt("id"),
+            (0 until result.length()).map { result.getString(it) }
+        )
+    }
+
+    fun newPropsPacket(data: JSONObject): PropsPacket {
+        val params = data.getJSONObject("params")
+        val items = mutableMapOf<String, String>()
+        for (key in params.keys()) {
+            items[key] = params.getString(key)
+        }
+        return PropsPacket(items)
+    }
+}
+
 class DeviceController(private val address: Address) {
-
-    interface State
-    class ConnectingState : State
-    class ConnectedState : State
-    class DisconnectedState : State
-
-    private interface Command
-    private class AttachCommand : Command
-    private class ConnectCommand : Command
-    private class DeviceCommand(val outgoing: OutgoingPacket) : Command
-    private class DetachCommand : Command
-
-    private interface IncomingPacket
-    private data class ResultPacket(val id: Int, val result: List<String>) : IncomingPacket {
-
-        val isSuccess
-            get() = result[0] == "ok"
-
-        fun matches(outgoing: OutgoingPacket): Boolean = (id == outgoing.id)
-    }
-    private data class PropsPacket(val params: Map<String, String>) : IncomingPacket
-    private class UnknownPacket : IncomingPacket
-
-    private data class OutgoingPacket(val method: String, val params: List<Any> = emptyList()) {
-
-        val id = Random().nextInt()
-    }
-
-    private class IncomingPacketDeserializer {
-
-        fun newResultPacket(data: JSONObject): ResultPacket {
-            val result = data.getJSONArray("result")
-            return ResultPacket(
-                data.getInt("id"),
-                (0 until result.length()).map { result.getString(it) }
-            )
-        }
-
-        fun newPropsPacket(data: JSONObject): PropsPacket {
-            val params = data.getJSONObject("params")
-            val items = mutableMapOf<String, String>()
-            for (key in params.keys()) {
-                items[key] = params.getString(key)
-            }
-            return PropsPacket(items)
-        }
-    }
-
-    private val CLOSED_CHANNEL = SocketChannel.open()
 
     private val incomingPacketDeserializer = IncomingPacketDeserializer()
 
@@ -84,14 +92,16 @@ class DeviceController(private val address: Address) {
     fun init() {
         val clientCount = getClientCount().share()
         val connectRequests = getConnectRequests(clientCount).share()
-        val channel = getChannel(connectRequests).share()
+        val openedChannel = getChannel(connectRequests).share()
+        val incoming = getIncoming(openedChannel).share()
+        val outgoing = getOutgoing(openedChannel).share()
+        val actualChannel = getActualChannel(openedChannel, incoming, outgoing)
         subscribeForClientCount(clientCount)
-        subscribeForConnect(connectRequests)
-        subscribeForConnectionState(channel)
-        subscribeForIncoming(channel)
-        subscribeForDeviceCommand(channel)
-        subscribeForDeviceState(channel)
-        subscribeForDisconnect(clientCount, channel)
+        subscribeForConnectionState(connectRequests, actualChannel)
+        subscribeForIncoming(incoming)
+        subscribeForDeviceCommand(outgoing)
+        subscribeForDeviceState(actualChannel)
+        subscribeForDisconnect(clientCount, actualChannel)
     }
 
     private fun getClientCount(): Observable<Int> {
@@ -117,18 +127,84 @@ class DeviceController(private val address: Address) {
         )
     }
 
-    private fun getChannel(connectRequests: Observable<Any>): Observable<SocketChannel> {
+    private fun getChannel(connectRequests: Observable<Any>): Observable<Result<SocketChannel>> {
         return connectRequests
             .observeOn(Schedulers.io())
             .switchMap {
-                Observable.create<SocketChannel> {
+                Observable.create<Result<SocketChannel>> {
                     try {
-                        it.onNext(SocketChannel.open(InetSocketAddress(address.host, address.port)))
+                        it.onNext(newSuccess(SocketChannel.open(InetSocketAddress(address.host, address.port))))
                     } catch (e: Exception) {
-                        it.onNext(CLOSED_CHANNEL)
+                        it.onNext(newError())
                     }
                 }
             }
+    }
+
+    private fun getIncoming(channelObservable: Observable<Result<SocketChannel>>): Observable<Result<JSONObject>> {
+        return channelObservable
+            .filter { it.isSuccess() }
+            .map { it.getData() }
+            .observeOn(Schedulers.newThread())
+            .switchMap { channel ->
+                Observable.create<Result<JSONObject>> {
+                    try {
+                        val buffer = ByteBuffer.allocate(1024)
+                        while (channel.isConnected) {
+                            val count = channel.read(buffer)
+                            val string = String(buffer.array(), 0, count)
+                            Timber.d("Incoming JSON: $string")
+                            it.onNext(newSuccess(JSONObject(string)))
+                            buffer.rewind()
+                        }
+                        it.onNext(newError())
+                    } catch (e: Exception) {
+                        it.onNext(newError())
+                    }
+                }
+            }
+    }
+
+    private fun getOutgoing(channelObservable: Observable<Result<SocketChannel>>): Observable<Result<Any>> {
+        return commands
+            .ofType(DeviceCommand::class.java)
+            .withLatestFrom(
+                channelObservable
+                    .filter { it.isSuccess() }
+                    .map { it.getData() },
+                BiFunction { command: DeviceCommand, channel: SocketChannel -> command.outgoing.to(channel) }
+            )
+            .observeOn(Schedulers.io())
+            .switchMap { (outgoing, channel) ->
+                Observable.create<Result<Any>> {
+                    try {
+                        val data = JSONObject()
+                        data.put("id", outgoing.id)
+                        data.put("method", outgoing.method)
+                        data.put("params", JSONArray(outgoing.params))
+                        val string = "$data\r\n"
+                        Timber.d("Sending packet $data")
+                        channel.write(ByteBuffer.wrap(string.toByteArray()))
+                        it.onNext(newSuccess(Any()))
+                    } catch (e: Exception) {
+                        it.onNext(newError())
+                    }
+                }
+            }
+    }
+
+    private fun getActualChannel(channelObservable: Observable<Result<SocketChannel>>, incomingObservable: Observable<Result<JSONObject>>,
+                                 outgoingObservable: Observable<Result<Any>>): Observable<Result<SocketChannel>> {
+        return Observable
+            .merge(
+                channelObservable,
+                incomingObservable
+                    .filter { it.isError() }
+                    .map { newError<SocketChannel>() },
+                outgoingObservable
+                    .filter { it.isError() }
+                    .map { newError<SocketChannel>() }
+            )
     }
 
     private fun subscribeForClientCount(clientCount: Observable<Int>) {
@@ -137,28 +213,26 @@ class DeviceController(private val address: Address) {
         }
     }
 
-    private fun subscribeForConnect(connectRequests: Observable<Any>) {
-        connectRequests.subscribe {
-            _connectionState.onNext(ConnectingState())
-        }
-    }
-
-    private fun subscribeForConnectionState(channelObservable: Observable<SocketChannel>) {
-        channelObservable
-            .map { if (it !== CLOSED_CHANNEL) ConnectedState() else DisconnectedState() }
+    private fun subscribeForConnectionState(connectRequests: Observable<Any>, channelObservable: Observable<Result<SocketChannel>>) {
+        Observable
+            .merge(
+                connectRequests
+                    .map { ConnectingState() },
+                channelObservable
+                    .map { if (it.isSuccess()) ConnectedState() else DisconnectedState() }
+            )
             .subscribe(_connectionState::onNext)
     }
 
-    private fun subscribeForDeviceState(channelObservable: Observable<SocketChannel>) {
+    private fun subscribeForDeviceState(channelObservable: Observable<Result<SocketChannel>>) {
         val outgoingObservable =
             channelObservable
-                .filter { it !== CLOSED_CHANNEL }
+                .filter { it.isSuccess() }
                 .map { OutgoingPacket("get_prop", listOf("power", "color_mode", "ct", "hue", "sat")) }
                 .share()
         Observable
             .merge(
                 channelObservable
-                    .filter { it !== CLOSED_CHANNEL }
                     .map { UNDEFINED_DEVICE_STATE },
                 Observable
                     .merge(
@@ -219,25 +293,10 @@ class DeviceController(private val address: Address) {
         }
     }
 
-    private fun subscribeForIncoming(channelObservable: Observable<SocketChannel>) {
-        channelObservable
-            .observeOn(Schedulers.newThread())
-            .switchMap { channel ->
-                val buffer = ByteBuffer.allocate(1024)
-                Observable.create<JSONObject> {
-                    try {
-                        while (channel.isConnected) {
-                            val count = channel.read(buffer)
-                            val string = String(buffer.array(), 0, count)
-                            Timber.d("Incoming JSON: $string")
-                            it.onNext(JSONObject(string))
-                            buffer.rewind()
-                        }
-                    } catch (e: Exception) {
-
-                    }
-                }
-            }
+    private fun subscribeForIncoming(incomingObservable: Observable<Result<JSONObject>>) {
+        incomingObservable
+            .filter { it.isSuccess() }
+            .map { it.getData() }
             .map {
                 when {
                     it.has("id") -> incomingPacketDeserializer.newResultPacket(it)
@@ -251,46 +310,23 @@ class DeviceController(private val address: Address) {
             }
     }
 
-    private fun subscribeForDisconnect(clientCount: Observable<Int>, channelObservable: Observable<SocketChannel>) {
+    private fun subscribeForDisconnect(clientCount: Observable<Int>, channelObservable: Observable<Result<SocketChannel>>) {
         clientCount
             .filter { it == 0 }
             .withLatestFrom(
-                channelObservable.filter { it !== CLOSED_CHANNEL },
+                channelObservable
+                    .filter { it.isSuccess() }
+                    .map { it.getData() },
                 BiFunction { _: Int, channel: SocketChannel -> channel }
             )
             .subscribe {
                 Timber.d("Disconnecting from $address...")
                 it.close()
-                _deviceState.onNext(UNDEFINED_DEVICE_STATE)
-                _connectionState.onNext(DisconnectedState())
             }
     }
 
-    private fun subscribeForDeviceCommand(channelObservable: Observable<SocketChannel>) {
-        commands
-            .ofType(DeviceCommand::class.java)
-            .withLatestFrom(
-                channelObservable.filter { it !== CLOSED_CHANNEL },
-                BiFunction { command: DeviceCommand, channel: SocketChannel -> command.outgoing.to(channel) }
-            )
-            .observeOn(Schedulers.io())
-            .subscribe { (outgoing, channel) ->
-                try {
-                    val data = JSONObject()
-                    data.put("id", outgoing.id)
-                    data.put("method", outgoing.method)
-                    data.put("params", JSONArray(outgoing.params))
-                    val string = "$data\r\n"
-                    Timber.d("Sending packet $data")
-                    channel.write(ByteBuffer.wrap(string.toByteArray()))
-                } catch (e: Exception) {
-                    Timber.w(e, "Cannot send packet")
-                    Timber.d("Disconnecting from $address...")
-                    channel.close()
-                    _deviceState.onNext(UNDEFINED_DEVICE_STATE)
-                    _connectionState.onNext(DisconnectedState())
-                }
-            }
+    private fun subscribeForDeviceCommand(outgoingObservable: Observable<Result<Any>>) {
+        outgoingObservable.subscribe()
     }
 
     fun attach() {
