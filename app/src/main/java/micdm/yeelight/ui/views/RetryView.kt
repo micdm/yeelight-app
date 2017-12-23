@@ -30,7 +30,7 @@ class RetryView(context: Context, attrs: AttributeSet) : BaseView(context, attrs
 
     init {
         if (!isInEditMode) {
-            DI.mainActivityComponent?.inject(this)
+            DI.activityComponent?.inject(this)
         }
         val attributes = context.obtainStyledAttributes(attrs, R.styleable.RetryView)
         label = attributes.getString(R.styleable.RetryView_label)

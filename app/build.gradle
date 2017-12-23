@@ -13,12 +13,28 @@ android {
         versionName '1.0'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+    signingConfigs {
+        release {}
+    }
     buildTypes {
+        debug {
+            debuggable true
+            applicationIdSuffix '.dev'
+            versionNameSuffix '-dev'
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
+}
+
+if (project.hasProperty("KEYSTORE_FILE")) {
+    android.signingConfigs.release.storeFile = file(KEYSTORE_FILE)
+    android.signingConfigs.release.storePassword = KEYSTORE_PASSWORD
+    android.signingConfigs.release.keyAlias = KEY_ALIAS
+    android.signingConfigs.release.keyPassword = KEY_PASSWORD
 }
 
 dependencies {

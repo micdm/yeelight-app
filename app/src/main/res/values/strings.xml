@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name">Yeelight</string>
     <string name="shortcut_label">Toggle</string>
     <string name="a__toggle_light__wait">Wait a second…</string>
     <string name="a__toggle_light__fail">Failed</string>

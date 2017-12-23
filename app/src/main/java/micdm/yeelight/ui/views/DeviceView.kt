@@ -18,8 +18,10 @@ import micdm.yeelight.models.Address
 import micdm.yeelight.models.DeviceState
 import micdm.yeelight.models.HsvColor
 import micdm.yeelight.models.UNDEFINED_DEVICE_STATE
-import micdm.yeelight.tools.DeviceController
+import micdm.yeelight.tools.ConnectedState
+import micdm.yeelight.tools.ConnectingState
 import micdm.yeelight.tools.DeviceControllerStore
+import micdm.yeelight.tools.DisconnectedState
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -89,9 +91,9 @@ class DeviceView(context: Context, attrs: AttributeSet) : BaseView(context, attr
                 connectedView.visibility = View.GONE
                 retryView.visibility = View.GONE
                 (when (it) {
-                    is DeviceController.ConnectingState -> connectingView
-                    is DeviceController.ConnectedState -> connectedView
-                    is DeviceController.DisconnectedState -> retryView
+                    is ConnectingState -> connectingView
+                    is ConnectedState -> connectedView
+                    is DisconnectedState -> retryView
                     else -> throw IllegalStateException("not supposed to happen")
                 }).visibility = View.VISIBLE
             }

@@ -24,7 +24,7 @@ class PickDeviceForShortcutView(context: Context, attrs: AttributeSet) : BaseVie
 
     init {
         if (!isInEditMode) {
-            DI.mainActivityComponent?.inject(this)
+            DI.activityComponent?.inject(this)
         }
     }
 
@@ -42,7 +42,7 @@ class PickDeviceForShortcutView(context: Context, attrs: AttributeSet) : BaseVie
             val intent = Intent()
             intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, launchIntent)
             intent.putExtra(Intent.EXTRA_SHORTCUT_NAME, resources.getString(R.string.shortcut_label))
-            intent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, Intent.ShortcutIconResource.fromContext(context, R.drawable.ic_launcher_foreground))
+            intent.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE, Intent.ShortcutIconResource.fromContext(context, R.drawable.ic_launcher))
             activity.setResult(AppCompatActivity.RESULT_OK, intent)
             activity.finish()
         }

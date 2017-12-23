@@ -15,8 +15,8 @@ class ShortcutActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        DI.shortcutActivityComponent = DI.appComponent!!.getShortcutActivityComponentBuilder().activityModule(ActivityModule(this)).build()
-        DI.shortcutActivityComponent?.inject(this)
+        DI.activityComponent = DI.appComponent!!.getActivityComponentBuilder().activityModule(ActivityModule(this)).build()
+        DI.activityComponent?.inject(this)
         setContentView(R.layout.a__shortcut)
     }
 
@@ -28,10 +28,5 @@ class ShortcutActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         deviceFinder.start()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        DI.shortcutActivityComponent = null
     }
 }

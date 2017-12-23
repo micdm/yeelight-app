@@ -40,7 +40,7 @@ class PickColorView(context: Context, attrs: AttributeSet): BaseView(context, at
 
     override fun setupViews() {
         setWillNotDraw(false)
-        setOnTouchListener { v, event ->
+        setOnTouchListener { _, event ->
             val radius = resources.getDimension(R.dimen.color_picker_mark_radius)
             hue.onNext(((maxOf(minOf(event.x, width - radius), radius) - radius) / (width - radius * 2) * MAX_HUE).toInt())
             invalidate()

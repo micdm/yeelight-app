@@ -30,8 +30,8 @@ class ToggleLightActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        DI.toggleLightActivityComponent = DI.appComponent!!.getToggleLightActivityComponentBuilder().activityModule(ActivityModule(this)).build()
-        DI.toggleLightActivityComponent?.inject(this)
+        DI.activityComponent = DI.appComponent!!.getActivityComponentBuilder().activityModule(ActivityModule(this)).build()
+        DI.activityComponent?.inject(this)
         setContentView(R.layout.a__toggle_light)
     }
 
@@ -70,10 +70,5 @@ class ToggleLightActivity : AppCompatActivity() {
         super.onStop()
         subscription?.dispose()
         deviceController.detach()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        DI.toggleLightActivityComponent = null
     }
 }

@@ -29,7 +29,7 @@ class ActivityModule(private val activity: AppCompatActivity) {
     @ActivityScope
     fun provideNavigator(): Navigator {
         val instance = Navigator()
-        DI.mainActivityComponent?.inject(instance)
+        DI.activityComponent?.inject(instance)
         return instance
     }
 
