@@ -152,13 +152,13 @@ class DeviceController(private val address: Address) {
     private fun subscribeForDeviceState(channelObservable: Observable<SocketChannel>) {
         val outgoingObservable =
             channelObservable
-                .filter { it !== CLOSED_CHANNEL && it.isConnected }
+                .filter { it !== CLOSED_CHANNEL }
                 .map { OutgoingPacket("get_prop", listOf("power", "color_mode", "ct", "hue", "sat")) }
                 .share()
         Observable
             .merge(
                 channelObservable
-                    .filter { it !== CLOSED_CHANNEL && it.isConnected }
+                    .filter { it !== CLOSED_CHANNEL }
                     .map { UNDEFINED_DEVICE_STATE },
                 Observable
                     .merge(
@@ -255,7 +255,7 @@ class DeviceController(private val address: Address) {
         clientCount
             .filter { it == 0 }
             .withLatestFrom(
-                channelObservable.filter { it !== CLOSED_CHANNEL && it.isConnected },
+                channelObservable.filter { it !== CLOSED_CHANNEL },
                 BiFunction { _: Int, channel: SocketChannel -> channel }
             )
             .subscribe {
@@ -270,7 +270,7 @@ class DeviceController(private val address: Address) {
         commands
             .ofType(DeviceCommand::class.java)
             .withLatestFrom(
-                channelObservable.filter { it !== CLOSED_CHANNEL && it.isConnected },
+                channelObservable.filter { it !== CLOSED_CHANNEL },
                 BiFunction { command: DeviceCommand, channel: SocketChannel -> command.outgoing.to(channel) }
             )
             .observeOn(Schedulers.io())
@@ -285,6 +285,10 @@ class DeviceController(private val address: Address) {
                     channel.write(ByteBuffer.wrap(string.toByteArray()))
                 } catch (e: Exception) {
                     Timber.w(e, "Cannot send packet")
+                    Timber.d("Disconnecting from $address...")
+                    channel.close()
+                    _deviceState.onNext(UNDEFINED_DEVICE_STATE)
+                    _connectionState.onNext(DisconnectedState())
                 }
             }
     }
