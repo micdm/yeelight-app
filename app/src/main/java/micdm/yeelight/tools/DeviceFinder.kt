@@ -12,7 +12,6 @@ import timber.log.Timber
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
-import java.net.SocketTimeoutException
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 
@@ -68,6 +67,7 @@ class DeviceFinder {
                     Observable.create<DatagramSocket> {
                         val socket = DatagramSocket(LOCAL_PORT)
                         socket.soTimeout = RECEIVE_TIMEOUT
+                        it.setCancellable { socket.close() }
                         it.onNext(socket)
                     }
                 }
@@ -105,7 +105,7 @@ class DeviceFinder {
                             socket.receive(packet)
                             devices.add(parseDevice(String(packet.data)))
                             it.onNext(DiscoveredState(devices))
-                        } catch (e: SocketTimeoutException) {
+                        } catch (e: Exception) {
                             socket.close()
                             it.onNext(FinishedState(devices))
                         }
